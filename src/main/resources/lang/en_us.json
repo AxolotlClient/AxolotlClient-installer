@@ -1,0 +1,8 @@
+{
+	"title": "AxolotlClient Installer",
+	"heading": "Install AxolotlClient",
+	"install": "Install",
+	"minecraft_version": "Minecraft Version",
+	"loader_version": "Loader Version",
+	"open_error": "Could not load"
+}
