@@ -20,7 +20,7 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer.ui;
+package io.github.axolotlclient.installer.util;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

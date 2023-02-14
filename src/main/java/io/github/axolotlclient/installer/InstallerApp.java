@@ -20,9 +20,9 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer.ui;
+package io.github.axolotlclient.installer;
 
-import static io.github.axolotlclient.installer.ui.Translate.tr;
+import static io.github.axolotlclient.installer.util.Translate.tr;
 
 import java.awt.Font;
 import java.io.IOException;
@@ -38,7 +38,6 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
-import io.github.axolotlclient.installer.Installer;
 import io.github.axolotlclient.installer.util.Util;
 
 /**

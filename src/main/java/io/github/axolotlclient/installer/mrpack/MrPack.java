@@ -57,11 +57,22 @@ public final class MrPack {
 
             if (entry.getName().equals("modrinth.index.json"))
                 pack = new MrPack(JsonDeserializer.read(zipIn, StandardCharsets.UTF_8).asObject(), side);
-            else if (entry.getName().startsWith("overrides/") && sideOverride) {
-                Path path = Util.checkParent(directory, directory.resolve(entry.getName().substring('/' + 1)));
+            else if (entry.getName().startsWith("overrides/")) {
+                Path path = Util.checkParent(directory,
+                        directory.resolve(entry.getName().substring(entry.getName().indexOf('/') + 1)));
                 if (!sideExtracted.add(path) && !sideOverride)
                     // the side-specific takes priority!
                     continue;
+
+                if (entry.isDirectory())
+                    continue;
+
+                if (Files.isRegularFile(path))
+                    Files.deleteIfExists(path);
+                if (Files.isDirectory(path))
+                    continue;
+                if (!Files.isDirectory(path.getParent()))
+                    Files.createDirectories(path.getParent());
 
                 Files.copy(zipIn, path);
             }

@@ -25,6 +25,7 @@ package io.github.axolotlclient.installer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ import masecla.modrinth4j.model.version.ProjectVersion.ProjectFile;
 public final class Installer {
 
     private static final String SLUG = "axolotlclient-modpack";
+    private static final String QUILT_LOADER = "https://meta.quiltmc.org/v3/versions/loader/%s/%s/profile/json";
 
     private final ModrinthAPI api;
     private final List<String> availableGameVers;
@@ -64,9 +66,37 @@ public final class Installer {
     public void install(ProjectVersion version, Path directory) throws IOException {
         ProjectFile file = version.getFiles().stream().filter(ProjectFile::isPrimary).findFirst()
                 .orElseThrow(() -> new IllegalStateException("No primary file found"));
+        MrPack pack;
         try (InputStream in = new URL(file.getUrl()).openStream()) {
-            MrPack pack = MrPack.extract(in, "client", directory);
-            pack.installMods(directory, ignored -> false);
+            pack = MrPack.extract(in, "client", directory);
+        }
+        pack.installMods(directory, ignored -> false);
+
+        Path versions = directory.resolve("versions");
+        URL url;
+        String versionName;
+
+        String gameVersion = pack.getDependencies().get("minecraft");
+        if (pack.getDependencies().containsKey("quilt-loader")) {
+            // install quilt!
+            String quiltLoader = pack.getDependencies().get("quilt-loader");
+            url = new URL(String.format(QUILT_LOADER, gameVersion, quiltLoader));
+            versionName = "quilt-loader-" + quiltLoader;
+        } else
+            throw new UnsupportedOperationException("Cannot find supported mod loader!");
+
+        versionName += '-' + gameVersion;
+
+        Path versionDir = versions.resolve(versionName);
+        Path versionJson = versionDir.resolve(versionName + ".json");
+
+        if (!Files.exists(versionJson)) {
+            if (!Files.isDirectory(versionDir))
+                Files.createDirectories(versionDir);
+
+            try (InputStream in = url.openStream()) {
+                Files.copy(in, versionJson);
+            }
         }
     }
 
