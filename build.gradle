@@ -14,6 +14,11 @@ dependencies {
 	implementation 'com.formdev:flatlaf:3.0'
 }
 
+java {
+	sourceCompatibility 8
+	targetCompatibility 8
+}
+
 license {
 	rule file("HEADER")
 }
