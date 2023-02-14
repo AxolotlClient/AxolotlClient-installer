@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 TheKodeToad <TheKodeToad@proton.me> & Contributors
+ * Copyright © 2023-2023 moehreag <moehreag@gmail.com>, TheKodeToad <TheKodeToad@proton.me> & Contributors
  *
  * This file is part of AxolotlClient Installer.
  *
