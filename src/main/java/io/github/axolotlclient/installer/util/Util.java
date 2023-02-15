@@ -61,4 +61,16 @@ public class Util {
             progress.update((float) read / max);
         }
     }
+
+    public static int[] parseSemVer(String version) {
+        String[] parts = version.split("\\.", 3);
+        if (parts.length < 3)
+            return null;
+
+        try {
+            return new int[] { Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]) };
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

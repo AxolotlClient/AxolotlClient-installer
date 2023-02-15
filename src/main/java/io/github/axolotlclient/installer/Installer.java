@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import io.github.axolotlclient.installer.mrpack.MrPack;
 import io.github.axolotlclient.installer.util.MinecraftVersionComparator;
+import io.github.axolotlclient.installer.util.Util;
 import masecla.modrinth4j.client.agent.UserAgent;
 import masecla.modrinth4j.endpoints.version.GetProjectVersions.GetProjectVersionsRequest;
 import masecla.modrinth4j.main.ModrinthAPI;
@@ -50,6 +51,8 @@ public final class Installer {
 
     private static final String SLUG = "axolotlclient-modpack";
     private static final String QUILT_LOADER = "https://meta.quiltmc.org/v3/versions/loader/%s/%s/profile/json";
+    private static final String FABRIC_LOADER = "https://meta.fabricmc.net/v2/versions/loader/%s/%s/profile/json";
+    private static final String LEGACY_FABRIC_LOADER = "https://meta.legacyfabric.net/v2/versions/loader/%s/%s/profile/json";
 
     private final ModrinthAPI api;
     private final List<String> availableGameVers;
@@ -89,6 +92,18 @@ public final class Installer {
             String quiltLoader = pack.getDependencies().get("quilt-loader");
             url = new URL(String.format(QUILT_LOADER, gameVersion, quiltLoader));
             versionName = "quilt-loader-" + quiltLoader;
+        } else if (pack.getDependencies().containsKey("fabric-loader")) {
+            // install fabric!
+            String fabricLoader = pack.getDependencies().get("fabric-loader");
+            int[] versionParts = Util.parseSemVer(gameVersion);
+
+            versionName = "fabric-loader-" + fabricLoader;
+
+            // heuristic for legacy fabric
+            if (versionParts == null || versionParts[0] > 1 || versionParts[1] > 13)
+                url = new URL(String.format(FABRIC_LOADER, gameVersion, fabricLoader));
+            else
+                url = new URL(String.format(LEGACY_FABRIC_LOADER, gameVersion, fabricLoader));
         } else
             throw new UnsupportedOperationException("Cannot find supported mod loader!");
 
