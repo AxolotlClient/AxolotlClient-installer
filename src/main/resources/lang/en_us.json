@@ -4,6 +4,7 @@
 	"install": "Install",
 	"minecraft_version": "Minecraft Version",
 	"loader_version": "Loader Version",
+	"game_folder": "Game Folder",
 	"open_error": "Could not load",
 	"downloading_modpack": "Downloading modpack...",
 	"installing_mods": "Installing mods...",

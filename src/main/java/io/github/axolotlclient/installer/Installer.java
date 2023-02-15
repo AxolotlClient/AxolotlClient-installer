@@ -94,19 +94,19 @@ public final class Installer {
                 .collect(Collectors.toList());
     }
 
-    public void install(ProjectVersion version, Path directory, ProgressConsumer progress) throws IOException {
+    public void install(ProjectVersion version, Path launcherDir, Path gameDir, ProgressConsumer progress) throws IOException {
         ProjectFile file = version.getFiles().stream().filter(ProjectFile::isPrimary).findFirst()
                 .orElseThrow(() -> new IllegalStateException("No primary file found"));
         progress.update(tr("downloading_modpack"), -1);
         MrPack pack;
         try (InputStream in = new URL(file.getUrl()).openStream()) {
-            pack = MrPack.extract(in, "client", directory);
+            pack = MrPack.extract(in, "client", gameDir);
         }
 
         progress.update(tr("installing_mods"), 0);
-        pack.installMods(directory, ignored -> false, progress);
+        pack.installMods(gameDir, ignored -> false, progress);
 
-        Path versions = directory.resolve("versions");
+        Path versions = launcherDir.resolve("versions");
         URL url;
         String versionName;
 
@@ -148,7 +148,7 @@ public final class Installer {
             }
         }
 
-        Path launcherProfiles = directory.resolve("launcher_profiles.json");
+        Path launcherProfiles = launcherDir.resolve("launcher_profiles.json");
         JsonObject profiles = null;
         if (Files.exists(launcherProfiles)) {
             try (InputStream in = Files.newInputStream(launcherProfiles)) {
@@ -163,8 +163,15 @@ public final class Installer {
             profiles = JsonObject.of("version", 3);
 
         JsonObject profilesMap = profiles.computeIfAbsent("profiles", JsonObject.DEFAULT_COMPUTION).asObject();
-        profilesMap.put("axolotlclient-" + gameVersion, JsonObject.of("created", new Date(), "lastUsed", new Date(),
-                "lastVersionId", versionName, "name", "AxolotlClient " + gameVersion, "icon", ICON));
+        profilesMap.put("axolotlclient-" + gameVersion,
+                JsonObject.of(
+                    "created", new Date(),
+                    "lastUsed", new Date(),
+                    "lastVersionId", versionName,
+                    "name", "AxolotlClient " + gameVersion,
+                    "icon", ICON,
+                    "gameDir", gameDir.toAbsolutePath()
+                ));
 
         try (OutputStream out = Files.newOutputStream(launcherProfiles)) {
             JsonSerializer.write(profiles, out, StandardCharsets.UTF_8);

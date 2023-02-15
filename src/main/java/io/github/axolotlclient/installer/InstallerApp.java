@@ -24,14 +24,29 @@ package io.github.axolotlclient.installer;
 
 import static io.github.axolotlclient.installer.util.Translate.tr;
 
-import java.awt.*;
+import java.awt.Font;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.icons.FlatFileViewDirectoryIcon;
 
 import io.github.axolotlclient.installer.util.Util;
 
@@ -42,7 +57,7 @@ public final class InstallerApp {
 
     private static final int WIDTH = 500;
     private static final int HEIGHT = 300;
-    private static final int COMBO_WIDTH = 100;
+    private static final int BOX_WIDTH = 200;
     private static final int PROGRESS_WIDTH = 200;
 
     public static void main(String[] args) throws ClassNotFoundException, InstantiationException,
@@ -66,17 +81,62 @@ public final class InstallerApp {
             frame.add(heading);
 
             JLabel minecraftVersionLabel = new JLabel(tr("minecraft_version"));
-            JComboBox<?> minecraftVersionBox = new JComboBox<>(
+            JComboBox<String> minecraftVersionBox = new JComboBox<>(
                     new DefaultComboBoxModel<>(installer.getAvailableGameVers().toArray(new String[0])));
 
-            minecraftVersionLabel.setBounds(WIDTH / 2 - minecraftVersionLabel.getPreferredSize().width / 2, 105,
+            minecraftVersionLabel.setBounds(WIDTH / 2 - minecraftVersionLabel.getPreferredSize().width / 2, 80,
                     minecraftVersionLabel.getPreferredSize().width, minecraftVersionLabel.getPreferredSize().height);
-            minecraftVersionBox.setBounds(WIDTH / 2 - COMBO_WIDTH / 2,
-                    minecraftVersionLabel.getY() + minecraftVersionLabel.getHeight(), COMBO_WIDTH,
+            minecraftVersionBox.setBounds(WIDTH / 2 - 50,
+                    minecraftVersionLabel.getY() + minecraftVersionLabel.getHeight() + 3, 100,
                     minecraftVersionBox.getPreferredSize().height);
 
             frame.add(minecraftVersionLabel);
             frame.add(minecraftVersionBox);
+
+            JLabel gameFolderLabel = new JLabel(tr("game_folder"));
+            JTextField gameFolderBox = new JTextField();
+            JButton gameFolderButton = new JButton(new FlatFileViewDirectoryIcon());
+
+            gameFolderLabel.setBounds(WIDTH / 2 - gameFolderLabel.getPreferredSize().width / 2, 135,
+                    gameFolderLabel.getPreferredSize().width, gameFolderLabel.getPreferredSize().height);
+            gameFolderBox.setBounds(WIDTH / 2 - 100, gameFolderLabel.getY() + gameFolderLabel.getHeight() + 3,
+                    200 - gameFolderBox.getPreferredSize().height - 5, gameFolderBox.getPreferredSize().height);
+            gameFolderButton.setBounds(gameFolderBox.getX() + gameFolderBox.getWidth() + 5, gameFolderBox.getY(),
+                    gameFolderBox.getHeight(), gameFolderBox.getHeight());
+
+            boolean[] dirty = new boolean[1];
+            String[] previousText = new String[1];
+
+            Runnable update = () -> {
+                gameFolderBox.setText(getGameFolder(minecraftVersionBox));
+                previousText[0] = gameFolderBox.getText();
+            };
+
+            gameFolderBox.addFocusListener(new FocusAdapter() {
+
+                @Override
+                public void focusLost(FocusEvent event) {
+                    if (!previousText[0].equals(gameFolderBox.getText()))
+                        dirty[0] = true;
+                }
+            });
+            minecraftVersionBox.addItemListener((event) -> {
+                if (!dirty[0])
+                    update.run();
+            });
+            update.run();
+
+            gameFolderButton.addActionListener((event) -> {
+                JFileChooser chooser = new JFileChooser(new File(gameFolderBox.getText()));
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
+                    return;
+                gameFolderBox.setText(chooser.getSelectedFile().getAbsolutePath());
+            });
+
+            frame.add(gameFolderLabel);
+            frame.add(gameFolderBox);
+            frame.add(gameFolderButton);
 
             JProgressBar progress = new JProgressBar(0, 100);
             progress.setBounds(WIDTH / 2 - PROGRESS_WIDTH / 2, HEIGHT - 110, PROGRESS_WIDTH, 20);
@@ -97,7 +157,8 @@ public final class InstallerApp {
                     try {
                         installer.install(
                                 installer.getModVerForGameVer(minecraftVersionBox.getSelectedItem().toString()),
-                                Util.getDotMinecraft(), ProgressConsumer.of(progress));
+                                Util.getDotMinecraft(), Paths.get(gameFolderBox.getText()),
+                                ProgressConsumer.of(progress));
                     } catch (Throwable e) {
                         System.err.println("Couldn't install");
                         e.printStackTrace();
@@ -114,7 +175,7 @@ public final class InstallerApp {
             // show
             frame.setSize(WIDTH, HEIGHT);
             frame.setResizable(false);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         } catch (Throwable e) {
@@ -123,5 +184,10 @@ public final class InstallerApp {
             JOptionPane.showMessageDialog(null, e.toString(), tr("open_error"), JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
+    }
+
+    private static String getGameFolder(JComboBox<String> box) {
+        return Util.getDotMinecraft().resolve("axolotlclient-" + box.getSelectedItem().toString()).toAbsolutePath()
+                .toString();
     }
 }
