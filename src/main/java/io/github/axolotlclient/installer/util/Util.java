@@ -22,6 +22,7 @@
 
 package io.github.axolotlclient.installer.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,6 +49,19 @@ public class Util {
             default:
                 return Paths.get(System.getProperty("user.home"), ".minecraft");
         }
+    }
+
+    public static byte[] readBytes(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        copy(in, out);
+        return out.toByteArray();
+    }
+
+    public static void copy(InputStream in, OutputStream out) throws IOException {
+        int length;
+        byte[] buffer = new byte[8192];
+        while ((length = in.read(buffer)) != -1)
+            out.write(buffer, 0, length);
     }
 
     public static void progressiveCopy(InputStream in, OutputStream out, int max, ProgressConsumer progress)

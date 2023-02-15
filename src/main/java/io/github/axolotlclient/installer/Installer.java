@@ -26,9 +26,13 @@ import static io.github.axolotlclient.installer.util.Translate.tr;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,9 @@ import java.util.stream.Collectors;
 import io.github.axolotlclient.installer.mrpack.MrPack;
 import io.github.axolotlclient.installer.util.MinecraftVersionComparator;
 import io.github.axolotlclient.installer.util.Util;
+import io.toadlabs.jfgjds.JsonDeserializer;
+import io.toadlabs.jfgjds.JsonSerializer;
+import io.toadlabs.jfgjds.data.JsonObject;
 import masecla.modrinth4j.client.agent.UserAgent;
 import masecla.modrinth4j.endpoints.version.GetProjectVersions.GetProjectVersionsRequest;
 import masecla.modrinth4j.main.ModrinthAPI;
@@ -49,22 +56,40 @@ import masecla.modrinth4j.model.version.ProjectVersion.ProjectFile;
  */
 public final class Installer {
 
-    private static final String SLUG = "axolotlclient-modpack";
+    private static final String MR_SLUG = "axolotlclient-modpack";
     private static final String QUILT_LOADER = "https://meta.quiltmc.org/v3/versions/loader/%s/%s/profile/json";
     private static final String FABRIC_LOADER = "https://meta.fabricmc.net/v2/versions/loader/%s/%s/profile/json";
     private static final String LEGACY_FABRIC_LOADER = "https://meta.legacyfabric.net/v2/versions/loader/%s/%s/profile/json";
+    private static final String ICON;
+
+    static {
+        ICON = getIcon();
+    }
 
     private final ModrinthAPI api;
     private final List<String> availableGameVers;
     private final Map<String, ProjectVersion> modVerFromGameVer = new HashMap<>();
 
+    private static String getIcon() {
+        try {
+            return "data:image/png;base64," + Base64.getEncoder()
+                    .encodeToString(Util.readBytes(Installer.class.getResourceAsStream("/icon.png")));
+        } catch (IOException e) {
+            System.err.println("Failed to load icon");
+            e.printStackTrace();
+            return "Furnace";
+        }
+    }
+
     public Installer() throws InterruptedException, ExecutionException {
         api = ModrinthAPI.rateLimited(UserAgent.builder().projectName("AxolotlClient").build(), "");
-        api.versions().getProjectVersions(SLUG, GetProjectVersionsRequest.builder().featured(true).build()).get()
+        // create a mapping of game version to latest mod version
+        api.versions().getProjectVersions(MR_SLUG, GetProjectVersionsRequest.builder().featured(true).build()).get()
                 .forEach((version) -> {
                     for (String game : version.getGameVersions())
                         this.modVerFromGameVer.put(game, version);
                 });
+        // collect a sorted list of game versions
         availableGameVers = modVerFromGameVer.keySet().stream().sorted(MinecraftVersionComparator.INSTANCE.reversed())
                 .collect(Collectors.toList());
     }
@@ -77,6 +102,7 @@ public final class Installer {
         try (InputStream in = new URL(file.getUrl()).openStream()) {
             pack = MrPack.extract(in, "client", directory);
         }
+
         progress.update(tr("installing_mods"), 0);
         pack.installMods(directory, ignored -> false, progress);
 
@@ -84,6 +110,7 @@ public final class Installer {
         URL url;
         String versionName;
 
+        // install the loader
         progress.update(tr("installing_loader"), -1);
 
         String gameVersion = pack.getDependencies().get("minecraft");
@@ -119,6 +146,28 @@ public final class Installer {
             try (InputStream in = url.openStream()) {
                 Files.copy(in, versionJson);
             }
+        }
+
+        Path launcherProfiles = directory.resolve("launcher_profiles.json");
+        JsonObject profiles = null;
+        if (Files.exists(launcherProfiles)) {
+            try (InputStream in = Files.newInputStream(launcherProfiles)) {
+                profiles = JsonDeserializer.read(in, StandardCharsets.UTF_8).asObject();
+            } catch (IOException e) {
+                System.err.println("Could not open profiles");
+                e.printStackTrace();
+            }
+        }
+
+        if (profiles == null)
+            profiles = JsonObject.of("version", 3);
+
+        JsonObject profilesMap = profiles.computeIfAbsent("profiles", JsonObject.DEFAULT_COMPUTION).asObject();
+        profilesMap.put("axolotlclient-" + gameVersion, JsonObject.of("created", new Date(), "lastUsed", new Date(),
+                "lastVersionId", versionName, "name", "AxolotlClient " + gameVersion, "icon", ICON));
+
+        try (OutputStream out = Files.newOutputStream(launcherProfiles)) {
+            JsonSerializer.write(profiles, out, StandardCharsets.UTF_8);
         }
     }
 
