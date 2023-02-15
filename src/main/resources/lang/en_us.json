@@ -7,5 +7,6 @@
 	"open_error": "Could not load",
 	"downloading_modpack": "Downloading modpack...",
 	"installing_mods": "Installing mods...",
-	"installing_loader": "Installing loader..."
+	"installing_loader": "Installing loader...",
+	"install_error": "Failed to install"
 }
