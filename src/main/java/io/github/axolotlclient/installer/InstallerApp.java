@@ -24,17 +24,12 @@ package io.github.axolotlclient.installer;
 
 import static io.github.axolotlclient.installer.util.Translate.tr;
 
-import java.awt.Font;
+import java.awt.*;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JProgressBar;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -59,6 +54,7 @@ public final class InstallerApp {
 
             // create a frame and use it for installation
             JFrame frame = new JFrame(tr("title"));
+            frame.setIconImage(ImageIO.read(Objects.requireNonNull(InstallerApp.class.getResourceAsStream("/icon.png"))));
             frame.setLayout(null);
 
             // add components
