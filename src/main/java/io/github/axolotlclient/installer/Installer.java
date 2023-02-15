@@ -22,6 +22,8 @@
 
 package io.github.axolotlclient.installer;
 
+import static io.github.axolotlclient.installer.util.Translate.tr;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -34,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import io.github.axolotlclient.installer.mrpack.MrPack;
+import io.github.axolotlclient.installer.util.MinecraftVersionComparator;
 import masecla.modrinth4j.client.agent.UserAgent;
 import masecla.modrinth4j.endpoints.version.GetProjectVersions.GetProjectVersionsRequest;
 import masecla.modrinth4j.main.ModrinthAPI;
@@ -63,18 +66,22 @@ public final class Installer {
                 .collect(Collectors.toList());
     }
 
-    public void install(ProjectVersion version, Path directory) throws IOException {
+    public void install(ProjectVersion version, Path directory, ProgressConsumer progress) throws IOException {
         ProjectFile file = version.getFiles().stream().filter(ProjectFile::isPrimary).findFirst()
                 .orElseThrow(() -> new IllegalStateException("No primary file found"));
+        progress.update(tr("downloading_modpack"), -1);
         MrPack pack;
         try (InputStream in = new URL(file.getUrl()).openStream()) {
             pack = MrPack.extract(in, "client", directory);
         }
-        pack.installMods(directory, ignored -> false);
+        progress.update(tr("installing_mods"), 0);
+        pack.installMods(directory, ignored -> false, progress);
 
         Path versions = directory.resolve("versions");
         URL url;
         String versionName;
+
+        progress.update(tr("installing_loader"), -1);
 
         String gameVersion = pack.getDependencies().get("minecraft");
         if (pack.getDependencies().containsKey("quilt-loader")) {

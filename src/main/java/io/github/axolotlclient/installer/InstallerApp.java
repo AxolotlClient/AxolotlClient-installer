@@ -25,7 +25,6 @@ package io.github.axolotlclient.installer;
 import static io.github.axolotlclient.installer.util.Translate.tr;
 
 import java.awt.Font;
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.DefaultComboBoxModel;
@@ -34,6 +33,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -48,6 +48,7 @@ public final class InstallerApp {
     private static final int WIDTH = 500;
     private static final int HEIGHT = 300;
     private static final int COMBO_WIDTH = 100;
+    private static final int PROGRESS_WIDTH = 200;
 
     public static void main(String[] args) throws ClassNotFoundException, InstantiationException,
             IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException, ExecutionException {
@@ -81,18 +82,35 @@ public final class InstallerApp {
             frame.add(minecraftVersionLabel);
             frame.add(minecraftVersionBox);
 
+            JProgressBar progress = new JProgressBar(0, 100);
+            progress.setBounds(WIDTH / 2 - PROGRESS_WIDTH / 2, HEIGHT - 110, PROGRESS_WIDTH, 20);
+            progress.setVisible(false);
+            progress.setStringPainted(true);
+
+            frame.add(progress);
+
             JButton installButton = new JButton(tr("install"));
             installButton.setBounds(WIDTH / 2 - installButton.getPreferredSize().width / 2, HEIGHT - 80,
                     installButton.getPreferredSize().width, installButton.getPreferredSize().height);
             installButton.addActionListener((event) -> {
-                try {
-                    installer.install(installer.getModVerForGameVer(minecraftVersionBox.getSelectedItem().toString()),
-                            Util.getDotMinecraft());
-                } catch (IOException e) {
-                    System.err.println("Couldn't install");
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(frame, e.toString(), tr("install_error"), JOptionPane.ERROR_MESSAGE);
-                }
+                installButton.setEnabled(false);
+                progress.setValue(0);
+                progress.setString("");
+                progress.setVisible(true);
+                new Thread(() -> {
+                    try {
+                        installer.install(
+                                installer.getModVerForGameVer(minecraftVersionBox.getSelectedItem().toString()),
+                                Util.getDotMinecraft(), ProgressConsumer.of(progress));
+                    } catch (Throwable e) {
+                        System.err.println("Couldn't install");
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(frame, e.toString(), tr("install_error"),
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                    progress.setVisible(false);
+                    installButton.setEnabled(true);
+                }).start();
             });
 
             frame.add(installButton);

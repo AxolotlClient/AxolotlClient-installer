@@ -20,7 +20,7 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer;
+package io.github.axolotlclient.installer.util;
 
 import java.util.Comparator;
 

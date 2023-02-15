@@ -37,6 +37,7 @@ import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import io.github.axolotlclient.installer.ProgressConsumer;
 import io.github.axolotlclient.installer.util.Util;
 import io.toadlabs.jfgjds.JsonDeserializer;
 import io.toadlabs.jfgjds.data.JsonObject;
@@ -100,7 +101,10 @@ public final class MrPack {
         return files;
     }
 
-    public void installMods(Path base, Predicate<MrFile> optionalModHandling) {
+    public void installMods(Path base, Predicate<MrFile> optionalModHandling, ProgressConsumer progress) {
+        float percent = 0;
+        float percentStep = 1F / files.size();
+
         for (MrFile file : files) {
             try {
                 if (file.getEnv() == MrEnvSpec.UNSUPPORTED)
@@ -108,11 +112,12 @@ public final class MrPack {
                 if (file.getEnv() == MrEnvSpec.OPTIONAL && !optionalModHandling.test(file))
                     continue;
 
-                file.download(base);
+                file.download(base, progress.subprogress(percent, percent + percentStep));
             } catch (IOException e) {
                 System.err.println("Failed to download file");
                 e.printStackTrace();
             }
+            percent += percentStep;
         }
     }
 }

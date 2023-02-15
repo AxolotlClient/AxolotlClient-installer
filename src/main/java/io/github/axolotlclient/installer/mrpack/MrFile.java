@@ -24,6 +24,7 @@ package io.github.axolotlclient.installer.mrpack;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+import io.github.axolotlclient.installer.ProgressConsumer;
 import io.github.axolotlclient.installer.util.Util;
 import io.toadlabs.jfgjds.data.JsonObject;
 import io.toadlabs.jfgjds.data.JsonValue;
@@ -41,12 +43,14 @@ public final class MrFile {
 
     private final Path path;
     private final String sha1;
+    private final int fileSize;
     private final MrEnvSpec env;
     private final List<String> urls;
 
     public MrFile(JsonObject object, String side) {
         path = Paths.get(object.get("path").getStringValue());
         sha1 = object.get("hashes").asObject().get("sha1").getStringValue();
+        fileSize = object.get("fileSize").getIntNumberValue();
         // :p
         env = object.getOpt("env").map(JsonValue::asObject).map((value) -> value.get(side))
                 .map(JsonValue::getStringValue).map((string) -> string.toUpperCase(Locale.ROOT)).map(MrEnvSpec::valueOf)
@@ -63,11 +67,15 @@ public final class MrFile {
         return sha1;
     }
 
+    public int getFileSize() {
+        return fileSize;
+    }
+
     public MrEnvSpec getEnv() {
         return env;
     }
 
-    public void download(Path base) throws IOException {
+    public void download(Path base, ProgressConsumer progress) throws IOException {
         Path target = Util.checkParent(base, base.resolve(path));
         Iterator<String> iterator = urls.iterator();
         while (iterator.hasNext()) {
@@ -76,7 +84,9 @@ public final class MrFile {
                 if (!Files.isDirectory(target.getParent()))
                     Files.createDirectories(target.getParent());
 
-                Files.copy(in, target);
+                try (OutputStream out = Files.newOutputStream(target)) {
+                    Util.progressiveCopy(in, out, fileSize, progress);
+                }
             } catch (IOException error) {
                 if (!iterator.hasNext())
                     throw new IOException("All urls from " + urls + " could not be downloaded", error);

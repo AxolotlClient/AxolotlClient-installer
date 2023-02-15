@@ -4,5 +4,8 @@
 	"install": "Install",
 	"minecraft_version": "Minecraft Version",
 	"loader_version": "Loader Version",
-	"open_error": "Could not load"
+	"open_error": "Could not load",
+	"downloading_modpack": "Downloading modpack...",
+	"installing_mods": "Installing mods...",
+	"installing_loader": "Installing loader..."
 }

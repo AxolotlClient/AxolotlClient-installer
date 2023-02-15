@@ -22,8 +22,13 @@
 
 package io.github.axolotlclient.installer.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import io.github.axolotlclient.installer.ProgressConsumer;
 
 public class Util {
 
@@ -42,6 +47,18 @@ public class Util {
                 return Paths.get(System.getenv("APPDATA"), ".minecraft");
             default:
                 return Paths.get(System.getProperty("user.home"), ".minecraft");
+        }
+    }
+
+    public static void progressiveCopy(InputStream in, OutputStream out, int max, ProgressConsumer progress)
+            throws IOException {
+        long read = 0;
+        int length;
+        byte[] buffer = new byte[8192];
+        while ((length = in.read(buffer)) != -1) {
+            out.write(buffer, 0, length);
+            read += length;
+            progress.update((float) read / max);
         }
     }
 }
