@@ -94,7 +94,8 @@ public final class Installer {
                 .collect(Collectors.toList());
     }
 
-    public void install(ProjectVersion version, Path launcherDir, Path gameDir, ProgressConsumer progress) throws IOException {
+    public void install(ProjectVersion version, Path launcherDir, Path gameDir, ProgressConsumer progress)
+            throws IOException {
         ProjectFile file = version.getFiles().stream().filter(ProjectFile::isPrimary).findFirst()
                 .orElseThrow(() -> new IllegalStateException("No primary file found"));
         progress.update(tr("downloading_modpack"), -1);
@@ -164,14 +165,8 @@ public final class Installer {
 
         JsonObject profilesMap = profiles.computeIfAbsent("profiles", JsonObject.DEFAULT_COMPUTION).asObject();
         profilesMap.put("axolotlclient-" + gameVersion,
-                JsonObject.of(
-                    "created", new Date(),
-                    "lastUsed", new Date(),
-                    "lastVersionId", versionName,
-                    "name", "AxolotlClient " + gameVersion,
-                    "icon", ICON,
-                    "gameDir", gameDir.toAbsolutePath()
-                ));
+                JsonObject.of("created", new Date(), "lastUsed", new Date(), "lastVersionId", versionName, "name",
+                        "AxolotlClient " + gameVersion, "icon", ICON, "gameDir", gameDir.toAbsolutePath()));
 
         try (OutputStream out = Files.newOutputStream(launcherProfiles)) {
             JsonSerializer.write(profiles, out, StandardCharsets.UTF_8);

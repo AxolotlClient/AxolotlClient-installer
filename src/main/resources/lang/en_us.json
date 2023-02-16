@@ -9,5 +9,9 @@
 	"downloading_modpack": "Downloading modpack...",
 	"installing_mods": "Installing mods...",
 	"installing_loader": "Installing loader...",
-	"install_error": "Failed to install"
+	"install_error": "Failed to install",
+	"mods_present_title": "Found mods",
+	"mods_present": "Your mods folder is not empty. Would you like to delete it?",
+	"complete_title": "Installation complete",
+	"complete": "The installation finished successfully!"
 }

@@ -28,7 +28,13 @@ import java.awt.Font;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
@@ -57,7 +63,6 @@ public final class InstallerApp {
 
     private static final int WIDTH = 500;
     private static final int HEIGHT = 300;
-    private static final int BOX_WIDTH = 200;
     private static final int PROGRESS_WIDTH = 200;
 
     public static void main(String[] args) throws ClassNotFoundException, InstantiationException,
@@ -69,7 +74,8 @@ public final class InstallerApp {
 
             // create a frame and use it for installation
             JFrame frame = new JFrame(tr("title"));
-            frame.setIconImage(ImageIO.read(Objects.requireNonNull(InstallerApp.class.getResourceAsStream("/icon.png"))));
+            frame.setIconImage(
+                    ImageIO.read(Objects.requireNonNull(InstallerApp.class.getResourceAsStream("/icon.png"))));
             frame.setLayout(null);
 
             // add components
@@ -150,15 +156,47 @@ public final class InstallerApp {
                     installButton.getPreferredSize().width, installButton.getPreferredSize().height);
             installButton.addActionListener((event) -> {
                 installButton.setEnabled(false);
-                progress.setValue(0);
-                progress.setString("");
-                progress.setVisible(true);
                 new Thread(() -> {
                     try {
+                        Path gameDir = Paths.get(gameFolderBox.getText());
+
+                        Path modsDir = gameDir.resolve("mods");
+                        if (Files.isDirectory(modsDir) && (Files.list(modsDir).count() != 0)) {
+                            int opt = JOptionPane.showConfirmDialog(frame, tr("mods_present"), tr("mods_present_title"),
+                                    JOptionPane.YES_NO_CANCEL_OPTION);
+                            if (opt == JOptionPane.CANCEL_OPTION) {
+                                progress.setVisible(false);
+                                installButton.setEnabled(true);
+                                return;
+                            } else if (opt == JOptionPane.YES_OPTION) {
+                                Files.walkFileTree(modsDir, new SimpleFileVisitor<Path>() {
+
+                                    @Override
+                                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                                            throws IOException {
+                                        Files.delete(file);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+
+                                    @Override
+                                    public FileVisitResult postVisitDirectory(Path file, IOException e)
+                                            throws IOException {
+                                        if (e != null)
+                                            throw e;
+
+                                        Files.delete(file);
+                                        return FileVisitResult.CONTINUE;
+                                    }
+                                });
+                            }
+                        }
+
+                        progress.setValue(0);
+                        progress.setString("");
+                        progress.setVisible(true);
                         installer.install(
                                 installer.getModVerForGameVer(minecraftVersionBox.getSelectedItem().toString()),
-                                Util.getDotMinecraft(), Paths.get(gameFolderBox.getText()),
-                                ProgressConsumer.of(progress));
+                                Util.getDotMinecraft(), gameDir, ProgressConsumer.of(progress));
                     } catch (Throwable e) {
                         System.err.println("Couldn't install");
                         e.printStackTrace();
@@ -166,6 +204,8 @@ public final class InstallerApp {
                                 JOptionPane.ERROR_MESSAGE);
                     }
                     progress.setVisible(false);
+                    JOptionPane.showMessageDialog(frame, tr("complete"), tr("complete_title"),
+                            JOptionPane.INFORMATION_MESSAGE);
                     installButton.setEnabled(true);
                 }).start();
             });
