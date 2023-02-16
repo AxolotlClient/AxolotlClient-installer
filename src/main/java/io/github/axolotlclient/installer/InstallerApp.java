@@ -143,6 +143,7 @@ public final class InstallerApp {
                 if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
                     return;
                 gameFolderBox.setText(chooser.getSelectedFile().getAbsolutePath());
+                dirty[0] = true;
             });
 
             frame.add(gameFolderLabel);
