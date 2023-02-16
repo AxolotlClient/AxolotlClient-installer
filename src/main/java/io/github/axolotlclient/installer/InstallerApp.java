@@ -51,9 +51,11 @@ import javax.swing.JTextField;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.icons.FlatFileViewDirectoryIcon;
 
+import io.github.axolotlclient.installer.util.DarkModeDetector;
 import io.github.axolotlclient.installer.util.Util;
 
 /**
@@ -68,7 +70,10 @@ public final class InstallerApp {
     public static void main(String[] args) throws ClassNotFoundException, InstantiationException,
             IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException, ExecutionException {
         try {
-            FlatLightLaf.setup();
+            if (DarkModeDetector.detect())
+                FlatDarkLaf.setup();
+            else
+                FlatLightLaf.setup();
 
             Installer installer = new Installer();
 
