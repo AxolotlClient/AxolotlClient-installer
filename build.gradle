@@ -20,6 +20,7 @@ java {
 
 	jar {
 		from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+		manifest.attributes 'Main-Class': 'io.github.axolotlclient.installer.InstallerApp'
 		duplicatesStrategy 'exclude'
 	}
 }
