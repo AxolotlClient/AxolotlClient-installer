@@ -17,6 +17,11 @@ dependencies {
 java {
 	sourceCompatibility 8
 	targetCompatibility 8
+
+	jar {
+		from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+		duplicatesStrategy 'exclude'
+	}
 }
 
 license {
