@@ -79,7 +79,7 @@ public final class MrFile {
         Path target = Util.checkParent(base, base.resolve(path));
         Iterator<String> iterator = urls.iterator();
         while (iterator.hasNext()) {
-            try (InputStream in = new URL(iterator.next()).openStream()) {
+            try (InputStream in = Util.openStream(new URL(iterator.next()))) {
                 Files.deleteIfExists(target);
                 if (!Files.isDirectory(target.getParent()))
                     Files.createDirectories(target.getParent());

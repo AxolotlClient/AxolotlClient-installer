@@ -26,12 +26,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import io.github.axolotlclient.installer.ProgressConsumer;
+import masecla.modrinth4j.client.agent.UserAgent;
 
-public class Util {
+public final class Util {
+
+    public static final UserAgent USER_AGENT = UserAgent.builder().projectName("AxolotlClient").build();
 
     public static Path checkParent(Path parent, Path path) {
         if (!parent.resolve(path).normalize().startsWith(parent.normalize()))
@@ -86,5 +91,11 @@ public class Util {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    public static InputStream openStream(URL url) throws IOException {
+        URLConnection connection = url.openConnection();
+        connection.setRequestProperty("User-Agent", USER_AGENT.toString());
+        return connection.getInputStream();
     }
 }

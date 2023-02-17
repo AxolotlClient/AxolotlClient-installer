@@ -206,8 +206,11 @@ public final class InstallerApp {
                     } catch (Throwable e) {
                         System.err.println("Couldn't install");
                         e.printStackTrace();
+                        progress.setVisible(false);
                         JOptionPane.showMessageDialog(frame, e.toString(), tr("install_error"),
                                 JOptionPane.ERROR_MESSAGE);
+                        installButton.setEnabled(true);
+                        return;
                     }
                     progress.setVisible(false);
                     JOptionPane.showMessageDialog(frame, tr("complete"), tr("complete_title"),

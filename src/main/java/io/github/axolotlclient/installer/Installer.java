@@ -45,7 +45,6 @@ import io.github.axolotlclient.installer.util.Util;
 import io.toadlabs.jfgjds.JsonDeserializer;
 import io.toadlabs.jfgjds.JsonSerializer;
 import io.toadlabs.jfgjds.data.JsonObject;
-import masecla.modrinth4j.client.agent.UserAgent;
 import masecla.modrinth4j.endpoints.version.GetProjectVersions.GetProjectVersionsRequest;
 import masecla.modrinth4j.main.ModrinthAPI;
 import masecla.modrinth4j.model.version.ProjectVersion;
@@ -82,7 +81,7 @@ public final class Installer {
     }
 
     public Installer() throws InterruptedException, ExecutionException {
-        api = ModrinthAPI.rateLimited(UserAgent.builder().projectName("AxolotlClient").build(), "");
+        api = ModrinthAPI.rateLimited(Util.USER_AGENT, "");
         // create a mapping of game version to latest mod version
         api.versions().getProjectVersions(MR_SLUG, GetProjectVersionsRequest.builder().featured(true).build()).get()
                 .forEach((version) -> {
@@ -100,7 +99,7 @@ public final class Installer {
                 .orElseThrow(() -> new IllegalStateException("No primary file found"));
         progress.update(tr("downloading_modpack"), -1);
         MrPack pack;
-        try (InputStream in = new URL(file.getUrl()).openStream()) {
+        try (InputStream in = Util.openStream(new URL(file.getUrl()))) {
             pack = MrPack.extract(in, "client", gameDir);
         }
 
