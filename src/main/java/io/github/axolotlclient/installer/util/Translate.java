@@ -38,31 +38,36 @@ import io.toadlabs.jfgjds.JsonDeserializer;
  */
 public final class Translate {
 
+    private static final String DEFAULT = "en_us";
     private static final Map<String, String> DATA = new HashMap<>();
 
     static {
         Locale locale = Locale.getDefault();
-        tryLoad("en_us");
-        tryLoad((locale.getLanguage() + '_' + locale.getCountry()).toLowerCase());
-    }
-
-    private static void tryLoad(String name) {
         try {
-            load(name);
-        } catch (Throwable error) {
-            System.err.printf("Could not load language file '%s':%n", name);
-            error.printStackTrace();
+            InputStream in = Translate.class.getResourceAsStream("/lang/" + DEFAULT + ".json");
+            if (in != null)
+                load(in);
+            else
+                System.err.printf("Could not find default language file (%s)%n", DEFAULT);
+        } catch (IOException e) {
+            System.err.printf("Could not load default language file (%s)%n", DEFAULT);
+            e.printStackTrace();
+        }
+
+        String system = locale.getLanguage() + '_' + locale.getCountry().toLowerCase();
+        try {
+            InputStream in = Translate.class.getResourceAsStream("/lang/" + system + ".json");
+            if (in != null)
+                load(in);
+        } catch (IOException e) {
+            System.err.printf("Could not load system language (%s)%n", system);
+            e.printStackTrace();
         }
     }
 
-    private static void load(String name) throws IOException {
-        try (InputStream in = Translate.class.getResourceAsStream("/lang/" + name + ".json")) {
-            if (in == null)
-                throw new FileNotFoundException("Resource not present");
-
-            JsonDeserializer.read(new InputStreamReader(in, StandardCharsets.UTF_8)).asObject()
-                    .forEach((key, value) -> DATA.put(key, value.getStringValue()));
-        }
+    private static void load(InputStream in) throws IOException {
+        JsonDeserializer.read(new InputStreamReader(in, StandardCharsets.UTF_8)).asObject()
+                .forEach((key, value) -> DATA.put(key, value.getStringValue()));
     }
 
     public static String tr(String key) {
