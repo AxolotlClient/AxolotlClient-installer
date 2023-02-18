@@ -22,7 +22,6 @@
 
 package io.github.axolotlclient.installer.util;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

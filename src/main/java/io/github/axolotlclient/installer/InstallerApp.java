@@ -138,7 +138,7 @@ public final class InstallerApp {
             update.run();
 
             gameFolderButton.addActionListener((event) -> {
-                JFileChooser chooser = new JFileChooser(new File(gameFolderBox.getText()).getParentFile());
+                JFileChooser chooser = new JFileChooser(new File(gameFolderBox.getText()));
                 chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.setFileHidingEnabled(false);
                 if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
