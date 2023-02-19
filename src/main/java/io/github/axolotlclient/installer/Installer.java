@@ -59,6 +59,7 @@ public final class Installer {
     private static final String QUILT_LOADER = "https://meta.quiltmc.org/v3/versions/loader/%s/%s/profile/json";
     private static final String FABRIC_LOADER = "https://meta.fabricmc.net/v2/versions/loader/%s/%s/profile/json";
     private static final String LEGACY_FABRIC_LOADER = "https://meta.legacyfabric.net/v2/versions/loader/%s/%s/profile/json";
+    private static final String COMBAT_SNAPSHOT_FABRIC_LOADER = "https://meta.fabric.rizecookey.net/v2/versions/loader/%s/%s/profile/json";
     private static final String ICON;
 
     static {
@@ -129,6 +130,8 @@ public final class Installer {
             // heuristic for legacy fabric
             if (versionParts == null || versionParts[0] > 1 || versionParts[1] > 13)
                 url = new URL(String.format(FABRIC_LOADER, gameVersion, fabricLoader));
+            else if (gameVersion.equals("1.16_combat-6"))
+                url = new URL(String.format(COMBAT_SNAPSHOT_FABRIC_LOADER, gameVersion, fabricLoader));
             else
                 url = new URL(String.format(LEGACY_FABRIC_LOADER, gameVersion, fabricLoader));
         } else
