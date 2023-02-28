@@ -118,7 +118,7 @@ public final class Installer {
         } else if (pack.getDependencies().containsKey("fabric-loader")) {
             // install fabric!
             String fabricLoader = pack.getDependencies().get("fabric-loader");
-            int[] versionParts = Util.parseSemVer(gameVersion);
+            int[] versionParts = Util.parseVersion(gameVersion);
 
             versionName = "fabric-loader-" + fabricLoader;
 
