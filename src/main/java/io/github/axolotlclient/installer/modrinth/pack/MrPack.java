@@ -20,7 +20,7 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer.mrpack;
+package io.github.axolotlclient.installer.modrinth.pack;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,12 +85,12 @@ public final class MrPack {
         return pack;
     }
 
-    private MrPack(JsonObject object, String side) {
+    private MrPack(JsonObject obj, String side) {
         dependencies = new HashMap<>();
         files = new ArrayList<>();
 
-        object.get("dependencies").asObject().forEach((key, value) -> dependencies.put(key, value.getStringValue()));
-        object.get("files").asArray().forEach((file) -> files.add(new MrFile(file.asObject(), side)));
+        obj.get("dependencies").asObject().forEach((key, value) -> dependencies.put(key, value.getStringValue()));
+        obj.get("files").asArray().forEach((file) -> files.add(new MrFile(file.asObject(), side)));
     }
 
     public Map<String, String> getDependencies() {

@@ -20,7 +20,7 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer.mrpack;
+package io.github.axolotlclient.installer.modrinth.pack;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,19 +43,19 @@ public final class MrFile {
 
     private final Path path;
     private final String sha1;
-    private final int fileSize;
+    private final int size;
     private final MrEnvSpec env;
     private final List<String> urls;
 
-    public MrFile(JsonObject object, String side) {
-        path = Paths.get(object.get("path").getStringValue());
-        sha1 = object.get("hashes").asObject().get("sha1").getStringValue();
-        fileSize = object.get("fileSize").getIntNumberValue();
+    public MrFile(JsonObject obj, String side) {
+        path = Paths.get(obj.get("path").getStringValue());
+        sha1 = obj.get("hashes").asObject().get("sha1").getStringValue();
+        size = obj.get("fileSize").getIntNumberValue();
         // :p
-        env = object.getOpt("env").map(JsonValue::asObject).map((value) -> value.get(side))
+        env = obj.getOpt("env").map(JsonValue::asObject).map((value) -> value.get(side))
                 .map(JsonValue::getStringValue).map((string) -> string.toUpperCase(Locale.ROOT)).map(MrEnvSpec::valueOf)
                 .orElse(MrEnvSpec.REQUIRED);
-        urls = object.get("downloads").asArray().getList().stream().map(JsonValue::getStringValue)
+        urls = obj.get("downloads").asArray().getList().stream().map(JsonValue::getStringValue)
                 .collect(Collectors.toList());
     }
 
@@ -67,8 +67,8 @@ public final class MrFile {
         return sha1;
     }
 
-    public int getFileSize() {
-        return fileSize;
+    public int getSize() {
+        return size;
     }
 
     public MrEnvSpec getEnv() {
@@ -85,7 +85,7 @@ public final class MrFile {
                     Files.createDirectories(target.getParent());
 
                 try (OutputStream out = Files.newOutputStream(target)) {
-                    Util.progressiveCopy(in, out, fileSize, progress);
+                    Util.progressiveCopy(in, out, size, progress);
                 }
             } catch (IOException error) {
                 if (!iterator.hasNext())

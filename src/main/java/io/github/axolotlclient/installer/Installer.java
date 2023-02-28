@@ -39,16 +39,14 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import io.github.axolotlclient.installer.mrpack.MrPack;
+import io.github.axolotlclient.installer.modrinth.api.ProjectFile;
+import io.github.axolotlclient.installer.modrinth.api.ProjectVersion;
+import io.github.axolotlclient.installer.modrinth.pack.MrPack;
 import io.github.axolotlclient.installer.util.MinecraftVersionComparator;
 import io.github.axolotlclient.installer.util.Util;
 import io.toadlabs.jfgjds.JsonDeserializer;
 import io.toadlabs.jfgjds.JsonSerializer;
 import io.toadlabs.jfgjds.data.JsonObject;
-import masecla.modrinth4j.endpoints.version.GetProjectVersions.GetProjectVersionsRequest;
-import masecla.modrinth4j.main.ModrinthAPI;
-import masecla.modrinth4j.model.version.ProjectVersion;
-import masecla.modrinth4j.model.version.ProjectVersion.ProjectFile;
 
 /**
  * The installer backend.
@@ -66,7 +64,6 @@ public final class Installer {
         ICON = getIcon();
     }
 
-    private final ModrinthAPI api;
     private final List<String> availableGameVers;
     private final Map<String, ProjectVersion> modVerFromGameVer = new HashMap<>();
 
@@ -81,14 +78,12 @@ public final class Installer {
         }
     }
 
-    public Installer() throws InterruptedException, ExecutionException {
-        api = ModrinthAPI.rateLimited(Util.USER_AGENT, "");
+    public Installer() throws InterruptedException, ExecutionException, IOException {
         // create a mapping of game version to latest mod version
-        api.versions().getProjectVersions(MR_SLUG, GetProjectVersionsRequest.builder().featured(true).build()).get()
-                .forEach((version) -> {
-                    for (String game : version.getGameVersions())
-                        this.modVerFromGameVer.put(game, version);
-                });
+        ProjectVersion.getFeatured(MR_SLUG).forEach((version) -> {
+            for (String game : version.getGameVersions())
+                this.modVerFromGameVer.put(game, version);
+        });
         // collect a sorted list of game versions
         availableGameVers = modVerFromGameVer.keySet().stream().sorted(MinecraftVersionComparator.INSTANCE.reversed())
                 .collect(Collectors.toList());

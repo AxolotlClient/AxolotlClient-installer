@@ -10,7 +10,6 @@ repositories {
 
 dependencies {
 	implementation 'com.github.TheKodeToad:jfgjds:cbace70a5e'
-	implementation 'dev.masecla:Modrinth4J:2.0.0'
 	implementation 'com.formdev:flatlaf:3.0'
 }
 

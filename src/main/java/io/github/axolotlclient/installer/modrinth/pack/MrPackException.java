@@ -20,7 +20,7 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer.mrpack;
+package io.github.axolotlclient.installer.modrinth.pack;
 
 import java.util.zip.ZipException;
 

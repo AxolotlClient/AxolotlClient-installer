@@ -32,11 +32,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import io.github.axolotlclient.installer.ProgressConsumer;
-import masecla.modrinth4j.client.agent.UserAgent;
 
 public final class Util {
 
-    public static final UserAgent USER_AGENT = UserAgent.builder().projectName("AxolotlClient").build();
+    public static final String USER_AGENT = "AxolotlClient";
 
     public static Path checkParent(Path parent, Path path) {
         if (!parent.resolve(path).normalize().startsWith(parent.normalize()))
@@ -95,7 +94,7 @@ public final class Util {
 
     public static InputStream openStream(URL url) throws IOException {
         URLConnection connection = url.openConnection();
-        connection.setRequestProperty("User-Agent", USER_AGENT.toString());
+        connection.setRequestProperty("User-Agent", USER_AGENT);
         return connection.getInputStream();
     }
 }

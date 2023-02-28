@@ -20,8 +20,26 @@
  * For more information, see the LICENSE file.
  */
 
-package io.github.axolotlclient.installer.mrpack;
+package io.github.axolotlclient.installer.modrinth.api;
 
-public enum MrEnvSpec {
-    REQUIRED, UNSUPPORTED, OPTIONAL
+import io.toadlabs.jfgjds.data.JsonObject;
+import io.toadlabs.jfgjds.data.JsonValue;
+
+public class ProjectFile {
+
+    private final String url;
+    private final boolean primary;
+
+    public ProjectFile(JsonObject obj) {
+        this.url = obj.get("url").getStringValue();
+        this.primary = obj.getOpt("primary").map(JsonValue::getBooleanValue).orElse(false);
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
 }
