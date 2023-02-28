@@ -74,7 +74,7 @@ public class MinecraftVersionComparator implements Comparator<String> {
             return ab1.compareTo(ab2);
 
         } else if (o1.contains("-pre") || o2.contains("-pre")) {
-            
+
             // Pre-release version
 
             String[] parts1;
@@ -86,6 +86,33 @@ public class MinecraftVersionComparator implements Comparator<String> {
             String[] parts2;
             if (o2.contains("-pre")) {
                 parts2 = o2.split("-pre");
+            } else {
+                parts2 = new String[]{o2, "99"};
+            }
+
+            int i;
+            if ((i = compare(parts1[0], parts2[0])) != 0) {
+                return i;
+            }
+
+            int n1 = Integer.parseInt(parts1[1]);
+            int n2 = Integer.parseInt(parts2[1]);
+
+            return Integer.compare(n1, n2);
+
+        } else if (o1.contains("-rc") || o2.contains("-rc")){
+
+            // Release Candidates
+
+            String[] parts1;
+            if (o1.contains("-rc")) {
+                parts1 = o1.split("-rc");
+            } else {
+                parts1 = new String[]{o1, "99"};
+            }
+            String[] parts2;
+            if (o2.contains("-rc")) {
+                parts2 = o2.split("-rc");
             } else {
                 parts2 = new String[]{o2, "99"};
             }
