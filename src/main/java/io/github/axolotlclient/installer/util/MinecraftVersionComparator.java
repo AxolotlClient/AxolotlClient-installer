@@ -30,6 +30,9 @@ public class MinecraftVersionComparator implements Comparator<String> {
     public static final MinecraftVersionComparator INSTANCE = new MinecraftVersionComparator();
 
     private static final Pattern ALPHABET_PATTERN = Pattern.compile("[a-zA-Z]+");
+    private static final String SNAPSHOT_INDICATOR = "w";
+    private static final String PRERELEASE_INDICATOR = "-pre";
+    private static final String RELEASE_CANDIDATE_INDICATOR = "-rc";
 
     @Override
     public int compare(String o1, String o2) {
@@ -42,9 +45,9 @@ public class MinecraftVersionComparator implements Comparator<String> {
             return 1;
         }
 
-        if (o1.indexOf("w") == 2 || o2.indexOf("w") == 2) {
-            boolean o1c = o1.contains("w");
-            boolean o2c = o2.contains("w");
+        if (o1.indexOf(SNAPSHOT_INDICATOR) == 2 || o2.indexOf(SNAPSHOT_INDICATOR) == 2) {
+            boolean o1c = o1.contains(SNAPSHOT_INDICATOR);
+            boolean o2c = o2.contains(SNAPSHOT_INDICATOR);
             if (o1c && !o2c) {
                 return -1;
             } else if (!o1c && o2c) {
@@ -53,8 +56,8 @@ public class MinecraftVersionComparator implements Comparator<String> {
 
             // probably a snapshot version
 
-            String[] parts1 = o1.split("w");
-            String[] parts2 = o2.split("w");
+            String[] parts1 = o1.split(SNAPSHOT_INDICATOR);
+            String[] parts2 = o2.split(SNAPSHOT_INDICATOR);
             if (Integer.parseInt(parts1[0]) < Integer.parseInt(parts2[0])) {
                 return -1;
             } else if (Integer.parseInt(parts1[0]) > Integer.parseInt(parts2[0])) {
@@ -73,59 +76,17 @@ public class MinecraftVersionComparator implements Comparator<String> {
 
             return ab1.compareTo(ab2);
 
-        } else if (o1.contains("-pre") || o2.contains("-pre")) {
+        } else if (o1.contains(PRERELEASE_INDICATOR) || o2.contains(PRERELEASE_INDICATOR)) {
 
             // Pre-release version
 
-            String[] parts1;
-            if (o1.contains("-pre")) {
-                parts1 = o1.split("-pre");
-            } else {
-                parts1 = new String[]{o1, "99"};
-            }
-            String[] parts2;
-            if (o2.contains("-pre")) {
-                parts2 = o2.split("-pre");
-            } else {
-                parts2 = new String[]{o2, "99"};
-            }
+            return compareWithSubstring(PRERELEASE_INDICATOR, o1, o2);
 
-            int i;
-            if ((i = compare(parts1[0], parts2[0])) != 0) {
-                return i;
-            }
-
-            int n1 = Integer.parseInt(parts1[1]);
-            int n2 = Integer.parseInt(parts2[1]);
-
-            return Integer.compare(n1, n2);
-
-        } else if (o1.contains("-rc") || o2.contains("-rc")){
+        } else if (o1.contains(RELEASE_CANDIDATE_INDICATOR) || o2.contains(RELEASE_CANDIDATE_INDICATOR)){
 
             // Release Candidates
 
-            String[] parts1;
-            if (o1.contains("-rc")) {
-                parts1 = o1.split("-rc");
-            } else {
-                parts1 = new String[]{o1, "99"};
-            }
-            String[] parts2;
-            if (o2.contains("-rc")) {
-                parts2 = o2.split("-rc");
-            } else {
-                parts2 = new String[]{o2, "99"};
-            }
-
-            int i;
-            if ((i = compare(parts1[0], parts2[0])) != 0) {
-                return i;
-            }
-
-            int n1 = Integer.parseInt(parts1[1]);
-            int n2 = Integer.parseInt(parts2[1]);
-
-            return Integer.compare(n1, n2);
+            return compareWithSubstring(RELEASE_CANDIDATE_INDICATOR, o1, o2);
         }
 
         // Probably a stable version. Or something else. Could also be some random semver-like version.
@@ -143,5 +104,27 @@ public class MinecraftVersionComparator implements Comparator<String> {
         }
 
         return 0;
+    }
+
+    private int compareWithSubstring(String sub, String o1, String o2){
+        String[] parts1;
+        if (o1.contains(sub)) {
+            parts1 = o1.split(sub);
+        } else {
+            parts1 = new String[]{o1, "99"};
+        }
+        String[] parts2;
+        if (o2.contains(sub)) {
+            parts2 = o2.split(sub);
+        } else {
+            parts2 = new String[]{o2, "99"};
+        }
+
+        int i;
+        if ((i = compare(parts1[0], parts2[0])) != 0) {
+            return i;
+        }
+
+        return Integer.compare(Integer.parseInt(parts1[1]), Integer.parseInt(parts2[1]));
     }
 }
