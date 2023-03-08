@@ -118,12 +118,11 @@ public final class Installer {
         } else if (pack.getDependencies().containsKey("fabric-loader")) {
             // install fabric!
             String fabricLoader = pack.getDependencies().get("fabric-loader");
-            int[] versionParts = Util.parseSemVer(gameVersion);
 
             versionName = "fabric-loader-" + fabricLoader;
 
-            // heuristic for legacy fabric
-            if (versionParts == null || versionParts[0] > 1 || versionParts[1] > 13)
+            // heuristic for legacy fabric, version range: ([1.0;1.13.2]) (both ends inclusive)
+            if (MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.13.2") <= 0 && MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.0") >= 0)
                 url = new URL(String.format(FABRIC_LOADER, gameVersion, fabricLoader));
             else if (gameVersion.equals("1.16_combat-6"))
                 url = new URL(String.format(COMBAT_SNAPSHOT_FABRIC_LOADER, gameVersion, fabricLoader));

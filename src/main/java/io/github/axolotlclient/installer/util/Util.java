@@ -30,6 +30,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import io.github.axolotlclient.installer.ProgressConsumer;
 
@@ -80,16 +83,24 @@ public final class Util {
         }
     }
 
-    public static int[] parseSemVer(String version) {
-        String[] parts = version.split("\\.", 3);
-        if (parts.length < 3)
-            return null;
+    public static int[] parseVersion(String version) {
+        // This not only supports SemVer, but also any frankenstein-ed mutations people could come up with.
+        // Only requirement: it needs to contain some numbers somewhere.
+        String[] parts = version
+                .replaceAll("_", ".0") // not sure about this one, but it corrects the placement of "experimental" versions
+                .replaceAll("\\D", ".")
+                .replaceAll("\\.\\.+", ".")
+                .replaceAll("\\.$", "").replaceAll("^\\.", "")
+                .split("\\.");
 
-        try {
-            return new int[] { Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]) };
-        } catch (NumberFormatException e) {
-            return null;
+        int[] versionParts = new int[parts.length];
+
+        List<Integer> list = Arrays.stream(parts).map(Integer::parseInt).collect(Collectors.toList());
+
+        for (int i = 0; i < parts.length; i++) {
+            versionParts[i] = list.get(i);
         }
+        return versionParts;
     }
 
     public static InputStream openStream(URL url) throws IOException {
