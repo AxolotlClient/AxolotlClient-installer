@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +65,7 @@ public final class Installer {
         ICON = getIcon();
     }
 
-    private final List<String> availableGameVers;
+    private List<String> availableGameVers = Collections.emptyList();
     private final Map<String, ProjectVersion> modVerFromGameVer = new HashMap<>();
 
     private static String getIcon() {
@@ -78,7 +79,7 @@ public final class Installer {
         }
     }
 
-    public Installer() throws InterruptedException, ExecutionException, IOException {
+    public void load() throws IOException {
         // create a mapping of game version to latest mod version
         ProjectVersion.getFeatured(MR_SLUG).forEach((version) -> {
             for (String game : version.getGameVersions())

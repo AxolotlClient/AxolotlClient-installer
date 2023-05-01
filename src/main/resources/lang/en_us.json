@@ -5,7 +5,6 @@
 	"minecraft_version": "Minecraft Version",
 	"loader_version": "Loader Version",
 	"game_folder": "Game Folder",
-	"open_error": "Could not load",
 	"downloading_modpack": "Downloading modpack...",
 	"installing_mods": "Installing mods...",
 	"installing_loader": "Installing loader...",
@@ -13,5 +12,7 @@
 	"mods_present_title": "Found mods",
 	"mods_present": "Your mods folder is not empty. Would you like to delete it?",
 	"complete_title": "Installation complete",
-	"complete": "The installation finished successfully!"
+	"complete": "The installation finished successfully!",
+	"open_error": "Could not load",
+	"loading": "Loading..."
 }
