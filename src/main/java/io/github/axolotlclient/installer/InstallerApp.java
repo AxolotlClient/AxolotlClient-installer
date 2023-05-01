@@ -25,8 +25,6 @@ package io.github.axolotlclient.installer;
 import static io.github.axolotlclient.installer.util.Translate.tr;
 
 import java.awt.Font;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -38,7 +36,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
-import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -55,6 +52,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.icons.FlatFileViewDirectoryIcon;
 
 import io.github.axolotlclient.installer.util.DarkModeDetector;
+import io.github.axolotlclient.installer.util.SimpleDocumentListener;
 import io.github.axolotlclient.installer.util.Util;
 
 /**
@@ -78,7 +76,7 @@ public final class InstallerApp {
     private final JLabel gameFolderLabel = new JLabel(tr("game_folder"));
     private final JTextField gameFolderBox = new JTextField();
     private final JButton gameFolderButton = new JButton(new FlatFileViewDirectoryIcon());
-    private String previousGameFolderText;
+    private final JLabel gameFolderCreatedLabel = new JLabel(tr("game_folder_created"));
     private boolean gameFolderDirty;
 
     private final JButton installButton = new JButton(tr("install"));
@@ -140,17 +138,20 @@ public final class InstallerApp {
         gameFolderButton.setBounds(gameFolderBox.getX() + gameFolderBox.getWidth() + 5, gameFolderBox.getY(),
                 gameFolderBox.getHeight(), gameFolderBox.getHeight());
 
-        gameFolderBox.addFocusListener(new FocusAdapter() {
+        gameFolderCreatedLabel.setBounds(WIDTH / 2 - gameFolderCreatedLabel.getPreferredSize().width / 2,
+                gameFolderBox.getY() + gameFolderBox.getPreferredSize().height + 3,
+                gameFolderCreatedLabel.getPreferredSize().width, gameFolderCreatedLabel.getPreferredSize().height);
+        gameFolderCreatedLabel.setVisible(false);
 
-            @Override
-            public void focusLost(FocusEvent event) {
-                if (!previousGameFolderText.equals(gameFolderBox.getText()))
-                    gameFolderDirty = true;
-            }
+        gameFolderBox.getDocument().addDocumentListener((SimpleDocumentListener) event -> {
+            gameFolderDirty = true;
+            updateGameFolderCreated();
         });
         minecraftVersionBox.addItemListener(event -> {
-            if (!gameFolderDirty)
-                updateGameFolder();
+            if (!gameFolderDirty) {
+                gameFolderBox.setText(getGameFolder(minecraftVersionBox));
+                gameFolderDirty = false;
+            }
         });
 
         gameFolderButton.addActionListener(event -> {
@@ -159,6 +160,7 @@ public final class InstallerApp {
             chooser.setFileHidingEnabled(false);
             if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION)
                 return;
+
             gameFolderBox.setText(chooser.getSelectedFile().getAbsolutePath());
             gameFolderDirty = true;
         });
@@ -166,6 +168,7 @@ public final class InstallerApp {
         frame.add(gameFolderLabel);
         frame.add(gameFolderBox);
         frame.add(gameFolderButton);
+        frame.add(gameFolderCreatedLabel);
 
         progress.setBounds(WIDTH / 2 - PROGRESS_WIDTH / 2, HEIGHT - 110, PROGRESS_WIDTH, 20);
         progress.setIndeterminate(true);
@@ -187,21 +190,17 @@ public final class InstallerApp {
             try {
                 installer.load();
             } catch (Throwable e) {
-                progress.setVisible(false);
+                setProgressVisible(false);
                 System.err.println("Couldn't load");
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(frame, e.toString(), tr("open_error"), JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
             }
             installer.getAvailableGameVers().forEach(item -> minecraftVersionModel.addElement(item));
-            progress.setVisible(false);
+            setProgressVisible(false);
+            gameFolderDirty = false;
             setEnabled(true);
         }).start();
-    }
-
-    private void updateGameFolder() {
-        gameFolderBox.setText(getGameFolder(minecraftVersionBox));
-        previousGameFolderText = gameFolderBox.getText();
     }
 
     private void setEnabled(boolean enabled) {
@@ -222,7 +221,7 @@ public final class InstallerApp {
                     int opt = JOptionPane.showConfirmDialog(frame, tr("mods_present"), tr("mods_present_title"),
                             JOptionPane.YES_NO_CANCEL_OPTION);
                     if (opt == JOptionPane.CANCEL_OPTION) {
-                        progress.setVisible(false);
+                        setProgressVisible(false);
                         setEnabled(true);
                         return;
                     } else if (opt == JOptionPane.YES_OPTION) {
@@ -248,21 +247,33 @@ public final class InstallerApp {
 
                 progress.setValue(0);
                 progress.setString("");
-                progress.setVisible(true);
+                setProgressVisible(true);
                 installer.install(installer.getModVerForGameVer(minecraftVersionBox.getSelectedItem().toString()),
                         Util.getDotMinecraft(), gameDir, ProgressConsumer.of(progress));
             } catch (Throwable e) {
                 System.err.println("Couldn't install");
                 e.printStackTrace();
-                progress.setVisible(false);
+                setProgressVisible(false);
                 JOptionPane.showMessageDialog(frame, e.toString(), tr("install_error"), JOptionPane.ERROR_MESSAGE);
                 setEnabled(true);
                 return;
             }
-            progress.setVisible(false);
+            setProgressVisible(false);
             JOptionPane.showMessageDialog(frame, tr("complete"), tr("complete_title"), JOptionPane.INFORMATION_MESSAGE);
             setEnabled(true);
         }).start();
+    }
+
+    private void setProgressVisible(boolean visible) {
+        progress.setVisible(visible);
+        if (!visible)
+            updateGameFolderCreated();
+        else
+            gameFolderCreatedLabel.setVisible(false);
+    }
+
+    private void updateGameFolderCreated() {
+        gameFolderCreatedLabel.setVisible(!Files.exists(Paths.get(gameFolderBox.getText())));
     }
 
     private static String getGameFolder(JComboBox<String> box) {

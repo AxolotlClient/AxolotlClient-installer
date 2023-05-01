@@ -5,6 +5,7 @@
 	"minecraft_version": "Minecraft Version",
 	"loader_version": "Loader Version",
 	"game_folder": "Game Folder",
+	"game_folder_created": "The folder will be created.",
 	"downloading_modpack": "Downloading modpack...",
 	"installing_mods": "Installing mods (%d/%d)...",
 	"installing_loader": "Installing loader...",
