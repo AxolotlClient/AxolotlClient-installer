@@ -22,6 +22,8 @@
 
 package io.github.axolotlclient.installer.modrinth.pack;
 
+import static io.github.axolotlclient.installer.util.Translate.tr;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -75,7 +77,7 @@ public final class MrFile {
         return env;
     }
 
-    public void download(Path base, ProgressConsumer progress) throws IOException {
+    public void download(Path base, int current, int max, ProgressConsumer progress) throws IOException {
         Path target = Util.checkParent(base, base.resolve(path));
         Iterator<String> iterator = urls.iterator();
         while (iterator.hasNext()) {
@@ -85,7 +87,7 @@ public final class MrFile {
                     Files.createDirectories(target.getParent());
 
                 try (OutputStream out = Files.newOutputStream(target)) {
-                    Util.progressiveCopy(in, out, size, progress);
+                    Util.progressiveCopy(in, out, size, tr("installing_mods", current, max), progress);
                 }
             } catch (IOException error) {
                 if (!iterator.hasNext())

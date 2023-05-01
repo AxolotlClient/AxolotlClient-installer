@@ -212,7 +212,7 @@ public final class InstallerApp {
     }
 
     private void install() {
-        installButton.setEnabled(false);
+        setEnabled(false);
         new Thread(() -> {
             try {
                 Path gameDir = Paths.get(gameFolderBox.getText());
@@ -223,7 +223,7 @@ public final class InstallerApp {
                             JOptionPane.YES_NO_CANCEL_OPTION);
                     if (opt == JOptionPane.CANCEL_OPTION) {
                         progress.setVisible(false);
-                        installButton.setEnabled(true);
+                        setEnabled(true);
                         return;
                     } else if (opt == JOptionPane.YES_OPTION) {
                         Files.walkFileTree(modsDir, new SimpleFileVisitor<Path>() {
@@ -256,12 +256,12 @@ public final class InstallerApp {
                 e.printStackTrace();
                 progress.setVisible(false);
                 JOptionPane.showMessageDialog(frame, e.toString(), tr("install_error"), JOptionPane.ERROR_MESSAGE);
-                installButton.setEnabled(true);
+                setEnabled(true);
                 return;
             }
             progress.setVisible(false);
             JOptionPane.showMessageDialog(frame, tr("complete"), tr("complete_title"), JOptionPane.INFORMATION_MESSAGE);
-            installButton.setEnabled(true);
+            setEnabled(true);
         }).start();
     }
 

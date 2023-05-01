@@ -37,7 +37,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import io.github.axolotlclient.installer.modrinth.api.ProjectFile;
@@ -100,7 +99,6 @@ public final class Installer {
             pack = MrPack.extract(in, "client", gameDir);
         }
 
-        progress.update(tr("installing_mods"), 0);
         pack.installMods(gameDir, ignored -> false, progress);
 
         Path versions = launcherDir.resolve("versions");

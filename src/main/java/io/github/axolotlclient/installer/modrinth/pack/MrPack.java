@@ -22,6 +22,7 @@
 
 package io.github.axolotlclient.installer.modrinth.pack;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -105,18 +108,17 @@ public final class MrPack {
         float percent = 0;
         float percentStep = 1F / files.size();
 
+        List<MrFile> files = this.files.stream().filter(file -> file.getEnv() != MrEnvSpec.UNSUPPORTED).filter(file -> file.getEnv() != MrEnvSpec.OPTIONAL || optionalModHandling.test(file)).collect(Collectors.toList());
+        int current = 1;
+        int max = files.size();
         for (MrFile file : files) {
             try {
-                if (file.getEnv() == MrEnvSpec.UNSUPPORTED)
-                    continue;
-                if (file.getEnv() == MrEnvSpec.OPTIONAL && !optionalModHandling.test(file))
-                    continue;
-
-                file.download(base, progress.subprogress(percent, percent + percentStep));
+                file.download(base, current, max, progress.subprogress(percent, percent + percentStep));
             } catch (IOException e) {
                 System.err.println("Failed to download file");
                 e.printStackTrace();
             }
+            current++;
             percent += percentStep;
         }
     }

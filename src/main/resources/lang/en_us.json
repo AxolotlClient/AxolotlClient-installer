@@ -6,7 +6,7 @@
 	"loader_version": "Loader Version",
 	"game_folder": "Game Folder",
 	"downloading_modpack": "Downloading modpack...",
-	"installing_mods": "Installing mods...",
+	"installing_mods": "Installing mods (%d/%d)...",
 	"installing_loader": "Installing loader...",
 	"install_error": "Failed to install",
 	"mods_present_title": "Found mods",
@@ -14,5 +14,5 @@
 	"complete_title": "Installation complete",
 	"complete": "The installation finished successfully!",
 	"open_error": "Could not load",
-	"loading": "Loading..."
+	"loading": "Loading versions..."
 }

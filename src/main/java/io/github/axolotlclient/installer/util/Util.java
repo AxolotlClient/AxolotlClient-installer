@@ -71,7 +71,7 @@ public final class Util {
             out.write(buffer, 0, length);
     }
 
-    public static void progressiveCopy(InputStream in, OutputStream out, int max, ProgressConsumer progress)
+    public static void progressiveCopy(InputStream in, OutputStream out, int max, String message, ProgressConsumer progress)
             throws IOException {
         long read = 0;
         int length;
@@ -79,7 +79,7 @@ public final class Util {
         while ((length = in.read(buffer)) != -1) {
             out.write(buffer, 0, length);
             read += length;
-            progress.update((float) read / max);
+            progress.update(message, (float) read / max);
         }
     }
 
