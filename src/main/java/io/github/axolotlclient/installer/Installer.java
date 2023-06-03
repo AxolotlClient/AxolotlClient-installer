@@ -122,11 +122,11 @@ public final class Installer {
 
             // heuristic for legacy fabric, version range: ([1.0;1.13.2]) (both ends inclusive)
             if (MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.13.2") <= 0 && MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.0") >= 0)
-                url = new URL(String.format(FABRIC_LOADER, gameVersion, fabricLoader));
+                url = new URL(String.format(LEGACY_FABRIC_LOADER, gameVersion, fabricLoader));
             else if (gameVersion.equals("1.16_combat-6"))
                 url = new URL(String.format(COMBAT_SNAPSHOT_FABRIC_LOADER, gameVersion, fabricLoader));
             else
-                url = new URL(String.format(LEGACY_FABRIC_LOADER, gameVersion, fabricLoader));
+                url = new URL(String.format(FABRIC_LOADER, gameVersion, fabricLoader));
         } else
             throw new UnsupportedOperationException("Cannot find supported mod loader!");
 
@@ -139,7 +139,7 @@ public final class Installer {
             if (!Files.isDirectory(versionDir))
                 Files.createDirectories(versionDir);
 
-            try (InputStream in = url.openStream()) {
+            try (InputStream in = Util.openStream(url)) {
                 Files.copy(in, versionJson);
             }
         }
