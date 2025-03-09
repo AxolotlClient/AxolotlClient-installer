@@ -48,6 +48,7 @@ import io.github.axolotlclient.installer.util.Util;
 import io.toadlabs.jfgjds.JsonDeserializer;
 import io.toadlabs.jfgjds.JsonSerializer;
 import io.toadlabs.jfgjds.data.JsonObject;
+import io.toadlabs.jfgjds.data.JsonValue;
 
 /**
  * The installer backend.
@@ -57,7 +58,7 @@ public final class Installer {
     private static final String MR_SLUG = "axolotlclient-modpack";
     private static final String QUILT_LOADER = "https://meta.quiltmc.org/v3/versions/loader/%s/%s/profile/json";
     private static final String FABRIC_LOADER = "https://meta.fabricmc.net/v2/versions/loader/%s/%s/profile/json";
-    private static final String LEGACY_FABRIC_LOADER = "https://meta.legacyfabric.net/v2/versions/loader/%s/%s/profile/json";
+    private static final String ORNITHE_LOADER = "https://meta.ornithemc.net/v3/versions/fabric-loader/%s/%s/profile/json";
     private static final String COMBAT_SNAPSHOT_FABRIC_LOADER = "https://meta.fabric.rizecookey.net/v2/versions/loader/%s/%s/profile/json";
     private static final String ICON;
 
@@ -114,28 +115,30 @@ public final class Installer {
         progress.update(tr("installing_loader"), -1);
 
         String gameVersion = pack.getDependencies().get("minecraft");
+        boolean fixInheritsFrom = false;
+
         if (pack.getDependencies().containsKey("quilt-loader")) {
             // install quilt!
             String quiltLoader = pack.getDependencies().get("quilt-loader");
             url = new URL(String.format(QUILT_LOADER, gameVersion, quiltLoader));
-            versionName = "quilt-loader-" + quiltLoader;
+            versionName = "quilt-loader-" + quiltLoader + '-' + gameVersion;
         } else if (pack.getDependencies().containsKey("fabric-loader")) {
             // install fabric!
             String fabricLoader = pack.getDependencies().get("fabric-loader");
 
-            versionName = "fabric-loader-" + fabricLoader;
+            versionName = "fabric-loader-" + fabricLoader + '-' + gameVersion;
 
             // heuristic for legacy fabric, version range: ([1.0;1.13.2]) (both ends inclusive)
-            if (MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.13.2") <= 0 && MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.0") >= 0)
-                url = new URL(String.format(LEGACY_FABRIC_LOADER, gameVersion, fabricLoader));
-            else if (gameVersion.equals("1.16_combat-6"))
+            if (MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.13.2") <= 0 && MinecraftVersionComparator.INSTANCE.compare(gameVersion, "1.0") >= 0) {
+                url = new URL(String.format(ORNITHE_LOADER, gameVersion, fabricLoader));
+                versionName += "-ornithe-gen1";
+                fixInheritsFrom = true;
+            } else if (gameVersion.equals("1.16_combat-6"))
                 url = new URL(String.format(COMBAT_SNAPSHOT_FABRIC_LOADER, gameVersion, fabricLoader));
             else
                 url = new URL(String.format(FABRIC_LOADER, gameVersion, fabricLoader));
         } else
             throw new UnsupportedOperationException("Cannot find supported mod loader!");
-
-        versionName += '-' + gameVersion;
 
         Path versionDir = versions.resolve(versionName);
         Path versionJson = versionDir.resolve(versionName + ".json");
@@ -145,7 +148,24 @@ public final class Installer {
                 Files.createDirectories(versionDir);
 
             try (InputStream in = Util.openStream(url)) {
-                Files.copy(in, versionJson);
+                if (fixInheritsFrom) {
+                    JsonObject versionObj = JsonDeserializer.read(in, StandardCharsets.UTF_8).asObject();
+
+                    if (versionObj.contains("inheritsFrom")) {
+                        String inheritsFrom = versionObj.get("inheritsFrom").getStringValue();
+                        String vanillaSuffix = "-vanilla";
+
+                        if (inheritsFrom.endsWith(vanillaSuffix))
+                            inheritsFrom = inheritsFrom.substring(0, inheritsFrom.length() - vanillaSuffix.length());
+
+                        versionObj.put("inheritsFrom", inheritsFrom);
+                    }
+
+                    try (OutputStream out = Files.newOutputStream(versionJson)) {
+                        JsonSerializer.write(versionObj, out, StandardCharsets.UTF_8);
+                    }
+                } else
+                    Files.copy(in, versionJson);
             }
         }
 

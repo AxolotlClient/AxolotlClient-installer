@@ -217,7 +217,7 @@ public final class InstallerApp {
                 Path gameDir = Paths.get(gameFolderBox.getText());
 
                 Path modsDir = gameDir.resolve("mods");
-                if (Files.isDirectory(modsDir) && (Files.list(modsDir).count() != 0)) {
+                if (Files.isDirectory(modsDir) && (Files.list(modsDir).findAny().isPresent())) {
                     int opt = JOptionPane.showConfirmDialog(frame, tr("mods_present"), tr("mods_present_title"),
                             JOptionPane.YES_NO_CANCEL_OPTION);
                     if (opt == JOptionPane.CANCEL_OPTION) {
