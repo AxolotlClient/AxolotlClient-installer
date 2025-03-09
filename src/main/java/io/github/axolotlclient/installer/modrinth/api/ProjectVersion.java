@@ -36,10 +36,11 @@ import io.toadlabs.jfgjds.data.JsonValue;
 
 public class ProjectVersion {
 
-    private static final String URL_FORMAT = "https://api.modrinth.com/v2/project/%s/version?featured=true";
+    private static final String URL_FORMAT = "https://api.modrinth.com/v2/project/%s/version";
 
     private final List<String> gameVersions;
     private final List<ProjectFile> files;
+    private final ReleaseChannel versionType;
 
     public static List<ProjectVersion> getFeatured(String slug) throws IOException {
         URL url = new URL(String.format(URL_FORMAT, slug));
@@ -54,6 +55,7 @@ public class ProjectVersion {
                 .collect(Collectors.toList());
         this.files = obj.get("files").asArray().stream().map(JsonValue::asObject).map(ProjectFile::new)
                 .collect(Collectors.toList());
+        this.versionType = ReleaseChannel.parse(obj.get("version_type").getStringValue());
     }
 
     public List<String> getGameVersions() {
@@ -62,5 +64,9 @@ public class ProjectVersion {
 
     public List<ProjectFile> getFiles() {
         return files;
+    }
+
+    public ReleaseChannel getVersionType() {
+        return versionType;
     }
 }

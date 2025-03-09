@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import io.github.axolotlclient.installer.modrinth.api.ProjectFile;
 import io.github.axolotlclient.installer.modrinth.api.ProjectVersion;
+import io.github.axolotlclient.installer.modrinth.api.ReleaseChannel;
 import io.github.axolotlclient.installer.modrinth.pack.MrPack;
 import io.github.axolotlclient.installer.util.MinecraftVersionComparator;
 import io.github.axolotlclient.installer.util.Util;
@@ -81,8 +82,12 @@ public final class Installer {
     public void load() throws IOException {
         // create a mapping of game version to latest mod version
         ProjectVersion.getFeatured(MR_SLUG).forEach((version) -> {
-            for (String game : version.getGameVersions())
-                this.modVerFromGameVer.put(game, version);
+            if (version.getVersionType() != ReleaseChannel.RELEASE)
+                return;
+
+            for (String gameVersion : version.getGameVersions())
+                if (!this.modVerFromGameVer.containsKey(gameVersion))
+                    this.modVerFromGameVer.put(gameVersion, version);
         });
         // collect a sorted list of game versions
         availableGameVers = modVerFromGameVer.keySet().stream().sorted(MinecraftVersionComparator.INSTANCE.reversed())
