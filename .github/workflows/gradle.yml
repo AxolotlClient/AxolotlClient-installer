@@ -30,6 +30,6 @@ jobs:
         arguments: build
         cache-read-only: ${{ github.ref != 'refs/heads/main' }}
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: build/libs/*.jar
